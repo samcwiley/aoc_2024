@@ -43,7 +43,6 @@ fn check_safe(report: &Vec<u8>) -> bool {
 // then check each of the edited reports for safety.
 fn check_safe_dampened(report: &Vec<u8>) -> bool {
     let safety_threshold = 3;
-    let increasing = report[1] > report[0];
 
     for i in 1..report.len() {
         let diff = u8::abs_diff(report[i], report[i - 1]);
@@ -54,13 +53,24 @@ fn check_safe_dampened(report: &Vec<u8>) -> bool {
             edit_2.remove(i - 1);
             return check_safe(&edit_1) || check_safe(&edit_2);
         }
+        // very dumb way to instead check for increasing/decreasing allowing mismatches
+        let mut increasing_count = 0;
+        let mut decreasing_count = 0;
+
+        for j in 1..report.len() {
+            if report[j] > report[j - 1] {
+                increasing_count += 1;
+            } else if report[j] < report[j - 1] {
+                decreasing_count += 1;
+            }
+        }
+        let increasing = increasing_count >= decreasing_count;
+
         if (increasing && report[i] < report[i - 1]) || (!increasing && report[i] > report[i - 1]) {
             let mut edit_1 = report.clone();
             edit_1.remove(i);
-            println!("{:?}", edit_1);
             let mut edit_2 = report.clone();
             edit_2.remove(i - 1);
-            println!("{:?}", edit_2);
             return check_safe(&edit_1) || check_safe(&edit_2);
         }
     }

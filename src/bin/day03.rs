@@ -3,8 +3,8 @@
 fn main() {
     let input = include_str!("../.inputs/input03.txt");
     let data = parse_input(input);
-    //let part1 = part1(&data);
-    //dbg!(part1);
+    let part1 = part1(&data);
+    dbg!(part1);
     //let part2 = part2(&data);
     //dbg!(part2);
 }
@@ -24,9 +24,8 @@ fn parse_input(input: &str) -> Vec<(i32, i32)> {
 
             if let Some((x, y)) = parse_coords(content) {
                 results.push((x, y));
+                start = end_pos + 1;
             }
-
-            start = end_pos + 1;
         } else {
             break;
         }
@@ -36,7 +35,6 @@ fn parse_input(input: &str) -> Vec<(i32, i32)> {
 }
 
 fn parse_coords(content: &str) -> Option<(i32, i32)> {
-    println!("{}", content);
     let parts: Vec<&str> = content.split(',').collect();
     if parts.len() == 2 {
         if let (Ok(x), Ok(y)) = (parts[0].parse(), parts[1].parse()) {
@@ -47,7 +45,6 @@ fn parse_coords(content: &str) -> Option<(i32, i32)> {
 }
 
 fn part1(input: &Vec<(i32, i32)>) -> String {
-    println!("{:?}", input);
     input.iter().map(|(a, b)| a * b).sum::<i32>().to_string()
 }
 

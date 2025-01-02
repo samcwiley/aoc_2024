@@ -1,5 +1,5 @@
 #![allow(unused_variables, dead_code, unused_imports)]
-use aoc_2024::utils::grid::*;
+use aoc_2024::grid::*;
 
 fn main() {
     let input = include_str!("../.inputs/input04.txt");
@@ -20,7 +20,7 @@ fn part1(input: &Grid<u8>) -> String {
     for i in 0..input.width {
         for j in 0..input.height {
             result += input
-                .search(i, j, 4)
+                .check_directions(i, j, 4)
                 .iter()
                 .filter(|m| **m == vec![b'X', b'M', b'A', b'S'])
                 .count();

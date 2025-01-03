@@ -98,7 +98,7 @@ impl Grid<Point> {
             for &datum in row.iter() {
                 let point = match datum {
                     b'.' => Point::Empty,
-                    b'#' => Point::Obstacle,
+                    b'#' => Point::Obstacle(Hit::new()),
                     b'^' => Point::Guy(Direction::Up),
                     _ => Point::Empty,
                 };
@@ -120,57 +120,130 @@ impl Grid<Point> {
         })
     }
 
-    pub fn grid_step(
-        &mut self,
-        coords: &mut (usize, usize),
-    ) -> Option<(&mut Self, (usize, usize), bool)> {
-        let mut visited = false;
-        let (guy_x, guy_y) = *coords;
-        println!("Guy is at {}, {}", guy_x, guy_y);
-        let current_point = self[(guy_x, guy_y)];
-        let current_direction: Direction = if let Point::Guy(direction) = current_point {
-            direction
-        } else {
-            Direction::Up
-        };
-        dbg!(current_direction);
-
-        let delta: (isize, isize) = match current_direction {
-            Direction::Up => (0, -1),
-            Direction::Down => (0, 1),
-            Direction::Left => (-1, 0),
-            Direction::Right => (1, 0),
-        };
-
-        let (new_x, new_y) = (guy_x as isize + delta.0, guy_y as isize + delta.1);
-
-        if new_x < 0 || new_y < 0 || new_x as usize >= self.width || new_y as usize >= self.height {
-            return None; // Elvis has left the building
-        }
-
-        let (new_x, new_y) = (new_x as usize, new_y as usize);
-        println!("We are going to: {}, {}", new_x, new_y);
-
-        if self[(new_x, new_y)] == Point::Visited {
-            self[(new_x, new_y)] = Point::Guy(current_direction.clone());
-            self[(guy_x, guy_y)] = Point::Visited;
-            visited = true;
-        } else if self[(new_x, new_y)] == Point::Empty {
-            println!("Time to move!");
-            println!("{guy_x}, {guy_y} will be visited, {new_x}, {new_y} is our new location");
-            self[(new_x, new_y)] = Point::Guy(current_direction.clone());
-            self[(guy_x, guy_y)] = Point::Visited;
-        } else if self[(new_x, new_y)] == Point::Obstacle {
-            let new_direction = match current_direction {
-                Direction::Up => Direction::Right,   // turn right
-                Direction::Right => Direction::Down, // turn down
-                Direction::Down => Direction::Left,  // turn left
-                Direction::Left => Direction::Up,    // turn up
+    pub fn run_grid(&self, coords: (usize, usize)) -> Option<u32> {
+        let mut grid: Grid<Point> = self.clone();
+        let (mut guy_x, mut guy_y) = coords.clone();
+        let mut spaces = 0;
+        loop {
+            let current_point = grid[(guy_x, guy_y)];
+            let current_direction: Direction = if let Point::Guy(direction) = current_point {
+                direction
+            } else {
+                Direction::Up
             };
-            self[(guy_x, guy_y)] = Point::Guy(new_direction);
+
+            let delta: (isize, isize) = match current_direction {
+                Direction::Up => (0, -1),
+                Direction::Down => (0, 1),
+                Direction::Left => (-1, 0),
+                Direction::Right => (1, 0),
+            };
+
+            let (new_x, new_y) = (guy_x as isize + delta.0, guy_y as isize + delta.1);
+
+            if new_x < 0
+                || new_y < 0
+                || new_x as usize >= grid.width
+                || new_y as usize >= grid.height
+            {
+                break; // Elvis has left the building
+            }
+
+            let (new_x, new_y) = (new_x as usize, new_y as usize);
+
+            match &mut grid[(new_x, new_y)] {
+                Point::Visited => {
+                    grid[(new_x, new_y)] = Point::Guy(current_direction.clone());
+                    grid[(guy_x, guy_y)] = Point::Visited;
+                    (guy_x, guy_y) = (new_x, new_y);
+                }
+                Point::Empty => {
+                    grid[(new_x, new_y)] = Point::Guy(current_direction.clone());
+                    grid[(guy_x, guy_y)] = Point::Visited;
+                    (guy_x, guy_y) = (new_x, new_y);
+                    spaces += 1;
+                }
+                Point::Obstacle(hit_directions) => {
+                    if hit_directions.hit(current_direction) {
+                        return None; // we are in a loop!
+                    } else {
+                        let new_direction = match current_direction {
+                            Direction::Up => Direction::Right,   // turn right
+                            Direction::Right => Direction::Down, // turn down
+                            Direction::Down => Direction::Left,  // turn left
+                            Direction::Left => Direction::Up,    // turn up
+                        };
+                        grid[(guy_x, guy_y)] = Point::Guy(new_direction);
+                    }
+                }
+                Point::Guy(_) => continue,
+            }
         }
-        println!("The new grid will look like {}", self);
-        Some((self, (new_x, new_y), visited))
+        Some(spaces)
+    }
+    pub fn part_2(&self, coords: (usize, usize)) -> u32 {
+        let mut grid: Grid<Point> = self.clone();
+        let (mut guy_x, mut guy_y) = coords.clone();
+        let mut obstacles = 0;
+        loop {
+            let current_point = grid[(guy_x, guy_y)];
+            let current_direction: Direction = if let Point::Guy(direction) = current_point {
+                direction
+            } else {
+                Direction::Up
+            };
+
+            let delta: (isize, isize) = match current_direction {
+                Direction::Up => (0, -1),
+                Direction::Down => (0, 1),
+                Direction::Left => (-1, 0),
+                Direction::Right => (1, 0),
+            };
+
+            let (new_x, new_y) = (guy_x as isize + delta.0, guy_y as isize + delta.1);
+
+            if new_x < 0
+                || new_y < 0
+                || new_x as usize >= grid.width
+                || new_y as usize >= grid.height
+            {
+                break; // Elvis has left the building
+            }
+
+            let (new_x, new_y) = (new_x as usize, new_y as usize);
+
+            match &mut grid[(new_x, new_y)] {
+                Point::Visited => {
+                    grid[(new_x, new_y)] = Point::Guy(current_direction.clone());
+                    grid[(guy_x, guy_y)] = Point::Visited;
+                    (guy_x, guy_y) = (new_x, new_y);
+                }
+                Point::Empty => {
+                    let mut new_grid = self.clone();
+                    new_grid[(new_x, new_y)] = Point::Obstacle(Hit::new());
+                    if let Some(_) = new_grid.run_grid(coords) {
+                        ()
+                    } else {
+                        obstacles += 1;
+                    }
+
+                    grid[(new_x, new_y)] = Point::Guy(current_direction.clone());
+                    grid[(guy_x, guy_y)] = Point::Visited;
+                    (guy_x, guy_y) = (new_x, new_y);
+                }
+                Point::Obstacle(_) => {
+                    let new_direction = match current_direction {
+                        Direction::Up => Direction::Right,   // turn right
+                        Direction::Right => Direction::Down, // turn down
+                        Direction::Down => Direction::Left,  // turn left
+                        Direction::Left => Direction::Up,    // turn up
+                    };
+                    grid[(guy_x, guy_y)] = Point::Guy(new_direction);
+                }
+                Point::Guy(_) => continue,
+            }
+        }
+        obstacles
     }
 }
 
@@ -207,7 +280,7 @@ impl<T> IndexMut<(usize, usize)> for Grid<T> {
 #[derive(Clone, Debug, Eq, PartialEq, Copy)]
 pub enum Point {
     Guy(Direction),
-    Obstacle,
+    Obstacle(Hit),
     Empty,
     Visited,
 }
@@ -220,7 +293,7 @@ impl fmt::Display for Point {
                 Direction::Left => "<",
                 Direction::Right => ">",
             },
-            Point::Obstacle => "#",
+            Point::Obstacle(_) => "#",
             Point::Empty => ".",
             Point::Visited => "*",
         };
@@ -234,4 +307,54 @@ pub enum Direction {
     Right,
     Down,
     Left,
+}
+
+#[derive(Copy, Clone, PartialEq, Debug, Eq)]
+pub struct Hit {
+    up: bool,
+    left: bool,
+    right: bool,
+    down: bool,
+}
+
+impl Hit {
+    pub fn new() -> Self {
+        Self {
+            up: false,
+            left: false,
+            right: false,
+            down: false,
+        }
+    }
+    pub fn hit(&mut self, from: Direction) -> bool {
+        //dbg!(&self);
+        //dbg!(from);
+        match from {
+            Direction::Up => {
+                if self.up {
+                    return true;
+                }
+                self.up = true;
+            }
+            Direction::Left => {
+                if self.left {
+                    return true;
+                }
+                self.left = true;
+            }
+            Direction::Right => {
+                if self.right {
+                    return true;
+                }
+                self.right = true;
+            }
+            Direction::Down => {
+                if self.down {
+                    return true;
+                }
+                self.down = true;
+            }
+        }
+        false
+    }
 }

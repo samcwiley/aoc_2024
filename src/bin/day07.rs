@@ -5,8 +5,8 @@ fn main() {
     let data = parse_input(input);
     let part1 = part1(&data);
     dbg!(part1);
-    //let part2 = part2(&data);
-    //dbg!(part2);
+    let part2 = part2(&data);
+    dbg!(part2);
 }
 
 #[derive(Debug)]
@@ -40,19 +40,19 @@ impl Equation {
             if ops.is_empty() {
                 return result == *last;
             }
-
-            if result >= *last && Self::check_w_concat(result - last, ops) {
+            // concat(a,b) = a*10^(# digits in b) + b
+            // # digits in b = log_{10}(b) + 1, or b.ilog10() + 1
+            let power = 10u64.pow(last.ilog10() + 1);
+            if result % power == *last && Self::check_w_concat(result / power, ops) {
                 return true;
             }
 
             if result % last == 0 && Self::check_w_concat(result / last, ops) {
                 return true;
             }
-
-            //10u64.pow(last.ilog10() + 1) + last;
-            //if Self::check_w_concat(result, &new_ops) {
-            //    return true;
-            //}
+            if result >= *last && Self::check_w_concat(result - last, ops) {
+                return true;
+            }
         }
 
         false
@@ -96,10 +96,7 @@ fn part2(input: &Vec<Equation>) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn it_works() {
-        let ex_input = "190: 10 19
+    const EX_INPUT: &str = "190: 10 19
 3267: 81 40 27
 83: 17 5
 156: 15 6
@@ -108,12 +105,20 @@ mod tests {
 192: 17 8 14
 21037: 9 7 18 13
 292: 11 6 16 20";
+
+    #[test]
+    fn test_part_1() {
         let ex_answer = "3749";
-        let ex_data = parse_input(ex_input);
+        let ex_data = parse_input(EX_INPUT);
         let result = part1(&ex_data);
         assert_eq!(result, ex_answer);
-        let ex_answer2 = "11387";
-        let result2 = part2(&ex_data);
-        assert_eq!(result2, ex_answer2);
+    }
+
+    #[test]
+    fn test_part_2() {
+        let ex_answer_2 = "11387";
+        let ex_data = parse_input(EX_INPUT);
+        let result_2 = part2(&ex_data);
+        assert_eq!(result_2, ex_answer_2);
     }
 }

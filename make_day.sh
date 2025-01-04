@@ -54,10 +54,10 @@ else
 fn main() {
     let input = include_str!("../.inputs/input$file_number.txt");
     let data = parse_input(input);
-    //let part1 = part1(&data);
-    //dbg!(part1);
-    //let part2 = part2(&data);
-    //dbg!(part2);
+    let part1 = part1(&data);
+    dbg!(part1);
+    let part2 = part2(&data);
+    dbg!(part2);
 }
 
 fn parse_input(input: &str) -> Vec<&str> {
@@ -68,26 +68,28 @@ fn part1(input: &Vec<&str>) -> String {
     "todo!()".to_string()
 }
 
-/*fn part2(input: &Vec<&str>) -> String {
+fn part2(input: &Vec<&str>) -> String {
     "todo!()".to_string()
 }
-*/
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    const EX_INPUT: &str = "";
 
     #[test]
-    fn it_works() {
-        let ex_input = "";
+    fn test_part_1() {
         let ex_answer = "";
-        let ex_data = parse_input(ex_input);
+        let ex_data = parse_input(EX_INPUT);
         let result = part1(&ex_data);
         assert_eq!(result, ex_answer);
-        /*let ex_answer2 = "";
+    }
+
+    #[test]
+    fn test_part_2() {
+        let ex_answer2 = "";
         let result2 = part2(&ex_data);
         assert_eq!(result2, ex_answer2);
-        */
     }
 }
 EOF

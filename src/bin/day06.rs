@@ -12,7 +12,7 @@ fn main() {
 
 fn parse_input(input: &str) -> (Grid<Point>, (usize, usize)) {
     let grid: Grid<Point> = Grid::<Point>::parse_grid(input).unwrap();
-    let coords = grid.search_grid(&Point::Guy(Direction::Up)).unwrap();
+    let coords = grid.find_first(&Point::Guy(Direction::Up)).unwrap();
     (grid, coords)
 }
 

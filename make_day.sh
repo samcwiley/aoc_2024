@@ -87,9 +87,10 @@ mod tests {
 
     #[test]
     fn test_part_2() {
-        let ex_answer2 = "";
+        let ex_answer_2 = "";
+        let ex_data = parse_input(EX_INPUT);
         let result2 = part2(&ex_data);
-        assert_eq!(result2, ex_answer2);
+        assert_eq!(result2, ex_answer_2);
     }
 }
 EOF

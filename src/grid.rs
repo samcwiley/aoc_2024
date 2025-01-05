@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fmt;
 use std::ops::{Index, IndexMut};
 
@@ -28,13 +29,28 @@ impl<T: Clone + PartialEq> Grid<T> {
             height,
         })
     }
-    pub fn search_grid(&self, value: &T) -> Option<(usize, usize)> {
+    pub fn find_first(&self, value: &T) -> Option<(usize, usize)> {
         for (i, row) in self.data.iter().enumerate() {
             for (j, point) in row.iter().enumerate() {
                 if point == value {
                     return Some((j, i));
                 }
             }
+        }
+        None
+    }
+
+    pub fn find_all(&self, value: &T) -> Option<Vec<(usize, usize)>> {
+        let mut locs = Vec::<(usize, usize)>::new();
+        for (i, row) in self.data.iter().enumerate() {
+            for (j, point) in row.iter().enumerate() {
+                if point == value {
+                    locs.push((j, i));
+                }
+            }
+        }
+        if !locs.is_empty() {
+            return Some(locs);
         }
         None
     }
@@ -72,6 +88,13 @@ impl<T: Clone + PartialEq> Grid<T> {
 
         directions
     }
+
+    pub fn is_valid_point(&self, point: (isize, isize)) -> bool {
+        point.0 >= 0
+            && point.0 <= self.width as isize
+            && point.1 >= 0
+            && point.1 <= self.height as isize
+    }
 }
 
 impl Grid<u8> {
@@ -85,6 +108,21 @@ impl Grid<u8> {
         }
 
         Grid::new(data)
+    }
+
+    pub fn find_unique_values(&self, exclusions: Option<Vec<u8>>) -> HashSet<u8> {
+        let mut uniques = HashSet::<u8>::new();
+        for row in &self.data {
+            for val in row {
+                uniques.insert(*val);
+            }
+        }
+        if let Some(to_remove) = exclusions {
+            for removal in to_remove {
+                uniques.remove(&removal);
+            }
+        }
+        uniques
     }
 }
 
@@ -261,6 +299,16 @@ impl<T: fmt::Display> fmt::Display for Grid<T> {
         Ok(())
     }
 }
+
+/*impl fmt::Display for Grid<u8> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for row in &self.data {
+            let s = String::from_utf8_lossy(row);
+            writeln!(f, "{}", s)?;
+        }
+        Ok(())
+    }
+}*/
 
 // for indexing the grid, using a tuple of coordinates, like grid_ex[(x, y)]
 impl<T> Index<(usize, usize)> for Grid<T> {

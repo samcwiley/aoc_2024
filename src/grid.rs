@@ -91,9 +91,9 @@ impl<T: Clone + PartialEq> Grid<T> {
 
     pub fn is_valid_point(&self, point: (isize, isize)) -> bool {
         point.0 >= 0
-            && point.0 <= self.width as isize
+            && point.0 < self.width as isize
             && point.1 >= 0
-            && point.1 <= self.height as isize
+            && point.1 < self.height as isize
     }
 }
 
@@ -124,6 +124,23 @@ impl Grid<u8> {
         }
         uniques
     }
+
+    pub fn print_as_chars(&self) {
+        for row in &self.data {
+            let s = String::from_utf8_lossy(row);
+            println!("{}", s);
+        }
+    }
+
+    /*impl fmt::Display for Grid<u8> {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            for row in &self.data {
+                let s = String::from_utf8_lossy(row);
+                writeln!(f, "{}", s)?;
+            }
+            Ok(())
+        }
+    }*/
 }
 
 impl Grid<Point> {
@@ -299,16 +316,6 @@ impl<T: fmt::Display> fmt::Display for Grid<T> {
         Ok(())
     }
 }
-
-/*impl fmt::Display for Grid<u8> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for row in &self.data {
-            let s = String::from_utf8_lossy(row);
-            writeln!(f, "{}", s)?;
-        }
-        Ok(())
-    }
-}*/
 
 // for indexing the grid, using a tuple of coordinates, like grid_ex[(x, y)]
 impl<T> Index<(usize, usize)> for Grid<T> {

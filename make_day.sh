@@ -60,15 +60,17 @@ fn main() {
     dbg!(part2);
 }
 
-fn parse_input(input: &str) -> Vec<&str> {
-    input.lines().collect()
+type Input = Vec<&str>;
+
+fn parse_input(raw: &str) -> Input {
+    raw.lines().collect()
 }
 
-fn part1(input: &Vec<&str>) -> String {
+fn part1(input: &Input) -> String {
     "todo!()".to_string()
 }
 
-fn part2(input: &Vec<&str>) -> String {
+fn part2(input: &Input) -> String {
     "todo!()".to_string()
 }
 

@@ -60,7 +60,7 @@ fn main() {
     dbg!(part2);
 }
 
-type Input = Vec<&str>;
+type Input<'a> = Vec<&'a str>;
 
 fn parse_input(raw: &str) -> Input {
     raw.lines().collect()

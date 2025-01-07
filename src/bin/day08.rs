@@ -14,7 +14,7 @@ fn main() {
 type Input = Grid<u8>;
 
 fn parse_input(input: &str) -> Input {
-    Grid::<u8>::parse_grid(input).unwrap()
+    Grid::<u8>::parse_grid_bytes(input).unwrap()
 }
 
 fn part1(input: &Input) -> String {

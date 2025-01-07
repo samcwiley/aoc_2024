@@ -3,7 +3,7 @@ use aoc_2024::grid::*;
 
 fn main() {
     let input = include_str!("../.inputs/input04.txt");
-    let data = Grid::<u8>::parse_grid(input).unwrap();
+    let data = Grid::<u8>::parse_grid_bytes(input).unwrap();
     let part1 = part1(&data);
     dbg!(part1);
     let part2 = part2(&data);
@@ -62,7 +62,7 @@ SAXAMASAAA
 MAMMMXMMMM
 MXMXAXMASX";
         let ex_answer = "18";
-        let ex_data = Grid::<u8>::parse_grid(ex_input).unwrap();
+        let ex_data = Grid::<u8>::parse_grid_bytes(ex_input).unwrap();
         let result = part1(&ex_data);
         assert_eq!(result, ex_answer);
         let ex_answer2 = "9";

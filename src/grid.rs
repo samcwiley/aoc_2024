@@ -99,7 +99,7 @@ impl<T: Clone + PartialEq> Grid<T> {
 
 impl Grid<u8> {
     /// Parses a &str into a Grid<u8>, where each character in the string is converted to its ascii byte value
-    pub fn parse_grid(input: &str) -> Result<Self, &'static str> {
+    pub fn parse_grid_bytes(input: &str) -> Result<Self, &'static str> {
         let data: Vec<Vec<u8>> = input.lines().map(|line| line.as_bytes().to_vec()).collect();
 
         let width = data.get(0).map_or(0, |row| row.len());
@@ -108,6 +108,32 @@ impl Grid<u8> {
         }
 
         Grid::new(data)
+    }
+
+    /// Parses &str input into Grid<u8>, where each character in the string is actually a number
+    pub fn parse_grid_nums(input: &str) -> Result<Self, &'static str> {
+        let mut data = Vec::new();
+
+        for line in input.lines() {
+            let mut row = Vec::new();
+
+            for byte in line.bytes() {
+                match byte.checked_sub(b'0') {
+                    None => return Err("Invalid character found in input"),
+                    Some(digit) if digit > 9 => return Err("Invalid digit found in input"),
+                    Some(digit) => row.push(digit),
+                }
+            }
+
+            data.push(row);
+        }
+
+        let width = data.get(0).map_or(0, |row| row.len());
+        if data.iter().any(|row| row.len() != width) {
+            return Err("All lines must have the same length");
+        }
+
+        Self::new(data)
     }
 
     pub fn find_unique_values(&self, exclusions: Option<Vec<u8>>) -> HashSet<u8> {

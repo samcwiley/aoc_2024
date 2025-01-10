@@ -1,6 +1,6 @@
 use std::collections::HashSet;
-use std::fmt;
 use std::ops::{Index, IndexMut};
+use std::{fmt, usize};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Grid<T> {
@@ -55,6 +55,21 @@ impl<T: Clone + PartialEq> Grid<T> {
         None
     }
 
+    pub fn find_all_points(&self, value: &T) -> Option<Vec<Point>> {
+        let mut locs = Vec::new();
+        for (i, row) in self.data.iter().enumerate() {
+            for (j, point) in row.iter().enumerate() {
+                if point == value {
+                    locs.push(Point::new(i, j));
+                }
+            }
+        }
+        if !locs.is_empty() {
+            return Some(locs);
+        }
+        None
+    }
+
     /// Returns a vector of vectors representing all directions (up, down, left, right, and diagonals)
     /// starting from `(x, y)` with `n` elements in each direction.
     pub fn check_directions(&self, x: usize, y: usize, n: usize) -> Vec<Vec<T>> {
@@ -89,11 +104,17 @@ impl<T: Clone + PartialEq> Grid<T> {
         directions
     }
 
-    pub fn is_valid_point(&self, point: (isize, isize)) -> bool {
+    //forgive me father for the sins of my laziness in refactoring
+    //i'll get to it
+    pub fn is_valid_boint(&self, point: (isize, isize)) -> bool {
         point.0 >= 0
             && point.0 < self.width as isize
             && point.1 >= 0
             && point.1 < self.height as isize
+    }
+
+    pub fn is_valid_point(&self, point: Point) -> bool {
+        point.x < self.width && point.y < self.height
     }
 }
 
@@ -169,19 +190,19 @@ impl Grid<u8> {
     }*/
 }
 
-impl Grid<Point> {
+impl Grid<GridObject> {
     pub fn parse_grid(input: &str) -> Result<Self, &'static str> {
         let input: Vec<Vec<u8>> = input.lines().map(|line| line.as_bytes().to_vec()).collect();
-        let mut data: Vec<Vec<Point>> = Vec::new();
+        let mut data: Vec<Vec<GridObject>> = Vec::new();
 
         for row in input.iter() {
             let mut grid_row = Vec::new();
             for &datum in row.iter() {
                 let point = match datum {
-                    b'.' => Point::Empty,
-                    b'#' => Point::Obstacle(Hit::new()),
-                    b'^' => Point::Guy(Direction::Up),
-                    _ => Point::Empty,
+                    b'.' => GridObject::Empty,
+                    b'#' => GridObject::Obstacle(Hit::new()),
+                    b'^' => GridObject::Guy(Direction::Up),
+                    _ => GridObject::Empty,
                 };
                 grid_row.push(point);
             }
@@ -202,12 +223,12 @@ impl Grid<Point> {
     }
 
     pub fn run_grid(&self, coords: (usize, usize)) -> Option<u32> {
-        let mut grid: Grid<Point> = self.clone();
+        let mut grid: Grid<GridObject> = self.clone();
         let (mut guy_x, mut guy_y) = coords.clone();
         let mut spaces = 0;
         loop {
             let current_point = grid[(guy_x, guy_y)];
-            let current_direction: Direction = if let Point::Guy(direction) = current_point {
+            let current_direction: Direction = if let GridObject::Guy(direction) = current_point {
                 direction
             } else {
                 Direction::Up
@@ -233,18 +254,18 @@ impl Grid<Point> {
             let (new_x, new_y) = (new_x as usize, new_y as usize);
 
             match &mut grid[(new_x, new_y)] {
-                Point::Visited => {
-                    grid[(new_x, new_y)] = Point::Guy(current_direction.clone());
-                    grid[(guy_x, guy_y)] = Point::Visited;
+                GridObject::Visited => {
+                    grid[(new_x, new_y)] = GridObject::Guy(current_direction.clone());
+                    grid[(guy_x, guy_y)] = GridObject::Visited;
                     (guy_x, guy_y) = (new_x, new_y);
                 }
-                Point::Empty => {
-                    grid[(new_x, new_y)] = Point::Guy(current_direction.clone());
-                    grid[(guy_x, guy_y)] = Point::Visited;
+                GridObject::Empty => {
+                    grid[(new_x, new_y)] = GridObject::Guy(current_direction.clone());
+                    grid[(guy_x, guy_y)] = GridObject::Visited;
                     (guy_x, guy_y) = (new_x, new_y);
                     spaces += 1;
                 }
-                Point::Obstacle(hit_directions) => {
+                GridObject::Obstacle(hit_directions) => {
                     if hit_directions.hit(current_direction) {
                         return None; // we are in a loop!
                     } else {
@@ -254,21 +275,21 @@ impl Grid<Point> {
                             Direction::Down => Direction::Left,  // turn left
                             Direction::Left => Direction::Up,    // turn up
                         };
-                        grid[(guy_x, guy_y)] = Point::Guy(new_direction);
+                        grid[(guy_x, guy_y)] = GridObject::Guy(new_direction);
                     }
                 }
-                Point::Guy(_) => continue,
+                GridObject::Guy(_) => continue,
             }
         }
         Some(spaces)
     }
     pub fn part_2(&self, coords: (usize, usize)) -> u32 {
-        let mut grid: Grid<Point> = self.clone();
+        let mut grid: Grid<GridObject> = self.clone();
         let (mut guy_x, mut guy_y) = coords.clone();
         let mut obstacles = 0;
         loop {
             let current_point = grid[(guy_x, guy_y)];
-            let current_direction: Direction = if let Point::Guy(direction) = current_point {
+            let current_direction: Direction = if let GridObject::Guy(direction) = current_point {
                 direction
             } else {
                 Direction::Up
@@ -294,34 +315,34 @@ impl Grid<Point> {
             let (new_x, new_y) = (new_x as usize, new_y as usize);
 
             match &mut grid[(new_x, new_y)] {
-                Point::Visited => {
-                    grid[(new_x, new_y)] = Point::Guy(current_direction.clone());
-                    grid[(guy_x, guy_y)] = Point::Visited;
+                GridObject::Visited => {
+                    grid[(new_x, new_y)] = GridObject::Guy(current_direction.clone());
+                    grid[(guy_x, guy_y)] = GridObject::Visited;
                     (guy_x, guy_y) = (new_x, new_y);
                 }
-                Point::Empty => {
+                GridObject::Empty => {
                     let mut new_grid = self.clone();
-                    new_grid[(new_x, new_y)] = Point::Obstacle(Hit::new());
+                    new_grid[(new_x, new_y)] = GridObject::Obstacle(Hit::new());
                     if let Some(_) = new_grid.run_grid(coords) {
                         ()
                     } else {
                         obstacles += 1;
                     }
 
-                    grid[(new_x, new_y)] = Point::Guy(current_direction.clone());
-                    grid[(guy_x, guy_y)] = Point::Visited;
+                    grid[(new_x, new_y)] = GridObject::Guy(current_direction.clone());
+                    grid[(guy_x, guy_y)] = GridObject::Visited;
                     (guy_x, guy_y) = (new_x, new_y);
                 }
-                Point::Obstacle(_) => {
+                GridObject::Obstacle(_) => {
                     let new_direction = match current_direction {
                         Direction::Up => Direction::Right,   // turn right
                         Direction::Right => Direction::Down, // turn down
                         Direction::Down => Direction::Left,  // turn left
                         Direction::Left => Direction::Up,    // turn up
                     };
-                    grid[(guy_x, guy_y)] = Point::Guy(new_direction);
+                    grid[(guy_x, guy_y)] = GridObject::Guy(new_direction);
                 }
-                Point::Guy(_) => continue,
+                GridObject::Guy(_) => continue,
             }
         }
         obstacles
@@ -358,25 +379,39 @@ impl<T> IndexMut<(usize, usize)> for Grid<T> {
     }
 }
 
+impl<T> Index<Point> for Grid<T> {
+    type Output = T;
+
+    fn index(&self, point: Point) -> &Self::Output {
+        &self.data[point.x][point.y]
+    }
+}
+
+impl<T> IndexMut<Point> for Grid<T> {
+    fn index_mut(&mut self, point: Point) -> &mut Self::Output {
+        &mut self.data[point.x][point.y]
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, Copy)]
-pub enum Point {
+pub enum GridObject {
     Guy(Direction),
     Obstacle(Hit),
     Empty,
     Visited,
 }
-impl fmt::Display for Point {
+impl fmt::Display for GridObject {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let representation = match self {
-            Point::Guy(direction) => match direction {
+            GridObject::Guy(direction) => match direction {
                 Direction::Up => "^",
                 Direction::Down => "v",
                 Direction::Left => "<",
                 Direction::Right => ">",
             },
-            Point::Obstacle(_) => "#",
-            Point::Empty => ".",
-            Point::Visited => "*",
+            GridObject::Obstacle(_) => "#",
+            GridObject::Empty => ".",
+            GridObject::Visited => "*",
         };
         write!(f, "{}", representation)
     }
@@ -437,5 +472,37 @@ impl Hit {
             }
         }
         false
+    }
+}
+
+#[derive(PartialEq, Clone, Copy, Eq, Hash)]
+pub struct Point {
+    pub x: usize,
+    pub y: usize,
+}
+
+impl Point {
+    pub fn new(x: usize, y: usize) -> Self {
+        Point { x: x, y: y }
+    }
+    pub fn move_by(&self, dx: isize, dy: isize) -> Option<Self> {
+        let new_x = self.x as isize + dx;
+        let new_y = self.y as isize + dy;
+
+        if new_x < 0 || new_y < 0 {
+            None
+        } else {
+            Some(Point {
+                x: new_x as usize,
+                y: new_y as usize,
+            })
+        }
+    }
+}
+
+impl fmt::Display for Point {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "({}, {})", self.x, self.y)?;
+        Ok(())
     }
 }

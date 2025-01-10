@@ -1,5 +1,5 @@
 #![allow(unused_variables, dead_code, unused_imports)]
-use aoc_2024::grid::Grid;
+use aoc_2024::grid::{Grid, Point};
 use std::{collections::HashSet, hash::Hash};
 
 fn main() {
@@ -36,12 +36,12 @@ fn part1(input: &Input) -> String {
                         (loc_2.0 as isize - dx, loc_2.1 as isize - dy),
                     );
 
-                    if input.is_valid_point(antinode_1) {
+                    if input.is_valid_boint(antinode_1) {
                         let (x1, y1) = (antinode_1.0 as usize, antinode_1.1 as usize);
                         antinode_set.insert((x1, y1));
                     }
 
-                    if input.is_valid_point(antinode_2) {
+                    if input.is_valid_boint(antinode_2) {
                         let (x2, y2) = (antinode_2.0 as usize, antinode_2.1 as usize);
                         antinode_set.insert((x2, y2));
                     }
@@ -72,13 +72,13 @@ fn part2(input: &Input) -> String {
                         (loc_2.0 as isize - dx, loc_2.1 as isize - dy),
                     );
 
-                    while input.is_valid_point(antinode_1) {
+                    while input.is_valid_boint(antinode_1) {
                         let (x1, y1) = (antinode_1.0 as usize, antinode_1.1 as usize);
                         antinode_set.insert((x1, y1));
                         antinode_1 = (antinode_1.0 as isize + dx, antinode_1.1 as isize + dy);
                     }
 
-                    while input.is_valid_point(antinode_2) {
+                    while input.is_valid_boint(antinode_2) {
                         let (x2, y2) = (antinode_2.0 as usize, antinode_2.1 as usize);
                         antinode_set.insert((x2, y2));
                         antinode_2 = (antinode_2.0 as isize - dx, antinode_2.1 as isize - dy);

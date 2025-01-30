@@ -13,7 +13,6 @@ fn parse_input(input: &str) -> Vec<&str> {
     input.lines().collect()
 }
 
-// naiive but functional solutions for now. hoping to try to optimize and benchmark
 fn part1(input: &Vec<&str>) -> String {
     let mut list_1 = Vec::new();
     let mut list_2 = Vec::new();

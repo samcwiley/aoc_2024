@@ -1,6 +1,6 @@
 use std::collections::HashSet;
+use std::fmt;
 use std::ops::{Index, IndexMut};
-use std::{fmt, usize};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Grid<T> {
@@ -123,7 +123,7 @@ impl Grid<u8> {
     pub fn parse_grid_bytes(input: &str) -> Result<Self, &'static str> {
         let data: Vec<Vec<u8>> = input.lines().map(|line| line.as_bytes().to_vec()).collect();
 
-        let width = data.get(0).map_or(0, |row| row.len());
+        let width = data.first().map_or(0, |row| row.len());
         if data.iter().any(|row| row.len() != width) {
             return Err("All lines must have the same length");
         }
@@ -149,7 +149,7 @@ impl Grid<u8> {
             data.push(row);
         }
 
-        let width = data.get(0).map_or(0, |row| row.len());
+        let width = data.first().map_or(0, |row| row.len());
         if data.iter().any(|row| row.len() != width) {
             return Err("All lines must have the same length");
         }
@@ -210,7 +210,7 @@ impl Grid<GridObject> {
         }
 
         let height = data.len();
-        let width = data.get(0).map_or(0, |row| row.len());
+        let width = data.first().map_or(0, |row| row.len());
         if data.iter().any(|row| row.len() != width) {
             return Err("All lines must have the same length");
         }
@@ -224,7 +224,7 @@ impl Grid<GridObject> {
 
     pub fn run_grid(&self, coords: (usize, usize)) -> Option<u32> {
         let mut grid: Grid<GridObject> = self.clone();
-        let (mut guy_x, mut guy_y) = coords.clone();
+        let (mut guy_x, mut guy_y) = coords;
         let mut spaces = 0;
         loop {
             let current_point = grid[(guy_x, guy_y)];
@@ -255,12 +255,12 @@ impl Grid<GridObject> {
 
             match &mut grid[(new_x, new_y)] {
                 GridObject::Visited => {
-                    grid[(new_x, new_y)] = GridObject::Guy(current_direction.clone());
+                    grid[(new_x, new_y)] = GridObject::Guy(current_direction);
                     grid[(guy_x, guy_y)] = GridObject::Visited;
                     (guy_x, guy_y) = (new_x, new_y);
                 }
                 GridObject::Empty => {
-                    grid[(new_x, new_y)] = GridObject::Guy(current_direction.clone());
+                    grid[(new_x, new_y)] = GridObject::Guy(current_direction);
                     grid[(guy_x, guy_y)] = GridObject::Visited;
                     (guy_x, guy_y) = (new_x, new_y);
                     spaces += 1;
@@ -285,7 +285,7 @@ impl Grid<GridObject> {
     }
     pub fn part_2(&self, coords: (usize, usize)) -> u32 {
         let mut grid: Grid<GridObject> = self.clone();
-        let (mut guy_x, mut guy_y) = coords.clone();
+        let (mut guy_x, mut guy_y) = coords;
         let mut obstacles = 0;
         loop {
             let current_point = grid[(guy_x, guy_y)];
@@ -316,20 +316,19 @@ impl Grid<GridObject> {
 
             match &mut grid[(new_x, new_y)] {
                 GridObject::Visited => {
-                    grid[(new_x, new_y)] = GridObject::Guy(current_direction.clone());
+                    grid[(new_x, new_y)] = GridObject::Guy(current_direction);
                     grid[(guy_x, guy_y)] = GridObject::Visited;
                     (guy_x, guy_y) = (new_x, new_y);
                 }
                 GridObject::Empty => {
                     let mut new_grid = self.clone();
                     new_grid[(new_x, new_y)] = GridObject::Obstacle(Hit::new());
-                    if let Some(_) = new_grid.run_grid(coords) {
-                        ()
+                    if new_grid.run_grid(coords).is_some() {
                     } else {
                         obstacles += 1;
                     }
 
-                    grid[(new_x, new_y)] = GridObject::Guy(current_direction.clone());
+                    grid[(new_x, new_y)] = GridObject::Guy(current_direction);
                     grid[(guy_x, guy_y)] = GridObject::Visited;
                     (guy_x, guy_y) = (new_x, new_y);
                 }
@@ -475,6 +474,12 @@ impl Hit {
     }
 }
 
+impl Default for Hit {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(PartialEq, Clone, Copy, Eq, Hash)]
 pub struct Point {
     pub x: usize,
@@ -483,7 +488,7 @@ pub struct Point {
 
 impl Point {
     pub fn new(x: usize, y: usize) -> Self {
-        Point { x: x, y: y }
+        Point { x, y }
     }
     pub fn move_by(&self, dx: isize, dy: isize) -> Option<Self> {
         let new_x = self.x as isize + dx;

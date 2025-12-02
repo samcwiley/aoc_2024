@@ -2,7 +2,7 @@
 
 set -e
 
-YEAR=2024
+YEAR=202
 
 # Validate day argument
 if [[ -z "$1" || "$1" =~ [^0-9] ]]; then
